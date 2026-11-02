@@ -1,0 +1,4 @@
+__pycache__/
+.pytest_cache/
+watermark_web/static/*.png
+watermark_web/temp/

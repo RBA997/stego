@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Extract</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --blue1:#00c6ff;
+  --blue2:#0072ff;
+  --soft:#f8fbff;
+  --shadow:rgba(0,0,0,0.15);
+}
+
+/* ===== BODY ===== */
+body{
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,var(--soft),#d6f0ff,#b3e5ff);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+}
+
+/* ===== CARD (WIDE + CLEAN) ===== */
+.card{
+  background:white;
+  padding:45px 40px;
+  border-radius:22px;
+  box-shadow:0 15px 40px var(--shadow);
+  text-align:center;
+
+  width:90%;
+  max-width:600px;
+}
+
+/* TITLE */
+h2{
+  margin-bottom:20px;
+  font-size:22px;
+  color:#333;
+}
+
+/* INPUT */
+input{
+  width:85%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:12px;
+  border:1px solid #ddd;
+  outline:none;
+  font-family:'Poppins';
+}
+
+/* ===== BUTTON (same style as Embed) ===== */
+button{
+  background:linear-gradient(135deg,var(--blue2),var(--blue1));
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s ease;
+  box-shadow:0 6px 15px rgba(0,114,255,0.25);
+  position:relative;
+  overflow:hidden;
+}
+
+/* hover effect */
+button:hover{
+  transform:translateY(-6px) scale(1.05);
+  box-shadow:0 12px 25px rgba(0,198,255,0.45);
+}
+
+/* click effect */
+button:active{
+  transform:translateY(-2px) scale(1.02);
+}
+
+/* shine effect */
+button::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,0.4),transparent);
+  transition:0.5s;
+}
+
+button:hover::before{
+  left:100%;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2> Extract Watermark</h2>
+
+ <form method="POST" enctype="multipart/form-data">
+    <input type="file" name="image" required><br><br>
+    <button type="submit">Extract</button>
+</form>
+</div>
+
+</body>
+</html>

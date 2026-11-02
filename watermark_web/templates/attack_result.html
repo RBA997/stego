@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Attack Results</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --red1:#ff4b2b;
+  --red2:#ff416c;
+}
+
+/* BODY */
+body{
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,#ffe0e0,#ffd1d1);
+  margin:0;
+  padding:30px;
+  display:flex;
+  justify-content:center;
+}
+
+.container{
+  width:90%;
+  max-width:900px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:40px;
+  border-radius:22px;
+  box-shadow:0 15px 40px rgba(0,0,0,0.15);
+  text-align:center;
+  margin-bottom:20px;
+}
+
+/* IMAGES */
+.images{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+img{
+  width:100%;
+  max-width:400px;
+  border-radius:12px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* METRICS */
+.metric{
+  background:#fff5f5;
+  padding:12px;
+  margin:10px 0;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:500;
+}
+
+/* BUTTON */
+a{
+  display:inline-block;
+  margin-top:15px;
+  text-decoration:none;
+  background:linear-gradient(135deg,var(--red1),var(--red2));
+  color:white;
+  padding:10px 15px;
+  border-radius:12px;
+  transition:0.3s;
+}
+
+a:hover{
+  transform:scale(1.05);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h2>💥 Attack Results</h2>
+
+    <div class="images">
+      <div>
+        <h4>Embedded</h4>
+        <img src="{{ url_for('static', filename=embedded) }}">
+      </div>
+
+      <div>
+        <h4>After Attack</h4>
+        <img src="{{ url_for('static', filename=attacked) }}">
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+	<div class="metric">PSNR: {{ psnr }}</div>
+	<div class="metric">SSIM: {{ ssim }}</div>
+	<div class="metric">BER: {{ ber }}</div>
+	<div class="metric">NC: {{ nc }}</div>
+
+    <a href="/">⬅ Back Home</a>
+
+  </div>
+
+</div>
+
+</body>
+</html>

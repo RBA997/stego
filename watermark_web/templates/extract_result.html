@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Extract Result</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --blue1:#0072ff;
+  --blue2:#00c6ff;
+}
+
+body{
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,#e0f7ff,#cce7ff);
+  margin:0;
+  padding:30px;
+  display:flex;
+  justify-content:center;
+}
+
+.container{
+  width:90%;
+  max-width:900px;
+}
+
+.card{
+  background:white;
+  padding:40px;
+  border-radius:22px;
+  box-shadow:0 15px 40px rgba(0,0,0,0.15);
+  text-align:center;
+  margin-bottom:20px;
+}
+
+/* WATERMARK BOX */
+.watermark-box{
+  font-size:22px;
+  font-weight:600;
+  color:#0072ff;
+  padding:20px;
+  background:#f3faff;
+  border-radius:12px;
+  margin-top:20px;
+  word-break:break-word;
+}
+
+a{
+  display:inline-block;
+  margin-top:20px;
+  text-decoration:none;
+  background:linear-gradient(135deg,var(--blue1),var(--blue2));
+  color:white;
+  padding:10px 15px;
+  border-radius:12px;
+  transition:0.3s;
+}
+
+a:hover{
+  transform:scale(1.05);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h2>🔍 Extracted Watermark</h2>
+
+    <!--  النص المستخرج -->
+    <div class="watermark-box">
+      {{ watermark }}
+    </div>
+
+  </div>
+
+  <div class="card">
+    <a href="/">⬅ Back Home</a>
+  </div>
+
+</div>
+
+</body>
+</html>

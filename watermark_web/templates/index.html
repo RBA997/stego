@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watermark System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --blue1:#00c6ff;
+  --blue2:#0072ff;
+  --soft:#f8fbff;
+  --shadow:rgba(0,0,0,0.15);
+  --radius:18px;
+}
+
+body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,var(--soft),#d6f0ff,#b3e5ff);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:40px;
+  border-radius:25px;
+  box-shadow:0 15px 40px var(--shadow);
+  text-align:center;
+  width:320px;
+}
+
+/* TITLE */
+h1{
+  margin-bottom:20px;
+  font-size:22px;
+  color:#333;
+}
+
+/* BUTTONS */
+button{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,var(--blue2),var(--blue1));
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 8px 20px var(--shadow);
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>🌊 Watermark System</h1>
+
+  <a href="/embed"><button>Embed Watermark</button></a>
+  <a href="/attack"><button>Attack Image</button></a>
+  <a href="/extract"><button>Extract Watermark</button></a>
+</div>
+
+</body>
+</html>
