@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session
+from PIL import Image, UnidentifiedImageError
 import cv2
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
@@ -31,6 +32,23 @@ app.secret_key = "watermark_secret_key"
 
 # ================= STATIC DIR =================
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+
+def save_uploaded_image(file, path):
+    """Create upload storage on fresh checkouts and normalize uploads to PNG."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    try:
+        with Image.open(file.stream) as image:
+            image.convert("RGB").save(path, format="PNG")
+    except (UnidentifiedImageError, OSError, ValueError) as error:
+        raise ValueError("Please upload a valid PNG, JPEG, BMP, GIF, or WebP image.") from error
+
+
+@app.after_request
+def refresh_generated_images(response):
+    if request.endpoint == "static" and request.path.endswith(".png"):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
+
 
 # ================= GLOBAL =================
 original_watermark_global = ""
@@ -108,7 +126,7 @@ def embed():
         original_path = os.path.join(STATIC_DIR, "original.png")
         embedded_path = os.path.join(STATIC_DIR, "embedded.png")
 
-        file.save(original_path)
+        save_uploaded_image(file, original_path)
 
         # embedding
         if method in TRANSFORMS:
@@ -254,7 +272,7 @@ def extract():
             return "Error: Please upload an image."
 
         extract_path = os.path.join(STATIC_DIR, "to_extract.png")
-        file.save(extract_path)
+        save_uploaded_image(file, extract_path)
 
         method = request.form.get("method") or session.get("method", "lsb")
 
