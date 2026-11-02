@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 import pywt
+import zlib
 
 STRENGTH = 40
 REDUNDANCY = 5
-PREAMBLE = "1010101010101010"
+PREAMBLE = "11010011100100011101001110010001"
 HEADER_SIZE = 16
 
 
@@ -59,7 +60,8 @@ def build_message_packet(message):
         raise ValueError("Message exceeds the 16-bit packet length limit.")
     length_bits = int_to_16bit_binary(len(payload_bits))
 
-    return PREAMBLE + length_bits + payload_bits
+    checksum = format(zlib.crc32(message.encode("utf-8")), "032b")
+    return PREAMBLE + length_bits + payload_bits + checksum
 
 
 # DWT Functions
@@ -83,7 +85,7 @@ def extract_bit_from_pair(c1, c2):
 
 
 # Main Watermarking Functions
-def embed_message_dwt(image, message):
+def _embed_square(image, message):
     bits = build_message_packet(message)
 
     LL, (LH, HL, HH) = pywt.dwt2(image, 'haar')
@@ -96,6 +98,9 @@ def embed_message_dwt(image, message):
     if required_pairs > total_pairs:
         raise ValueError("Message is too large for this image.")
 
+    # Repeat complete packets across the image so cropping at the borders
+    # need not destroy the only copy of the watermark.
+    bits *= total_pairs // required_pairs
     pair_index = 0
 
     for bit_char in bits:
@@ -156,33 +161,79 @@ def extract_raw_bits(image, max_bits=None):
     return extracted_bits
 
 
+def _center_square(image):
+    side = min(image.shape) // 2 * 2
+    top = (image.shape[0] - side) // 2
+    left = (image.shape[1] - side) // 2
+    return top, left, side
+
+
+def embed_message_dwt(image, message):
+    # The central square survives the app's fixed-canvas quarter rotation,
+    # including landscape/portrait images whose outside edges are cropped.
+    top, left, side = _center_square(image)
+    if side < 2:
+        raise ValueError("Message is too large for this image.")
+    result = image.copy()
+    result[top:top + side, left:left + side] = _embed_square(
+        image[top:top + side, left:left + side], message)
+    return result
+
+
+def _decode_packet(image):
+    top, left, side = _center_square(image)
+    if side < 2:
+        return None
+    raw_bits = extract_raw_bits(image[top:top + side, left:left + side])
+    offset = 0
+    while True:
+        start = raw_bits.find(PREAMBLE, offset)
+        if start == -1:
+            return None
+        offset = start + 1
+        header = start + len(PREAMBLE)
+        length_bits = raw_bits[header:header + HEADER_SIZE]
+        if len(length_bits) != HEADER_SIZE:
+            continue
+        length = int(length_bits, 2)
+        payload_start = header + HEADER_SIZE
+        payload_end = payload_start + length
+        checksum = raw_bits[payload_end:payload_end + 32]
+        if length % 8 or len(checksum) != 32:
+            continue
+        payload = raw_bits[payload_start:payload_end]
+        try:
+            message = bits_to_text(payload)
+        except (UnicodeDecodeError, ValueError):
+            continue
+        if zlib.crc32(message.encode("utf-8")) == int(checksum, 2):
+            return message
+
+
 def extract_message_dwt(image):
-    raw_bits = extract_raw_bits(image)
+    """Blindly recover intact packets and synchronize the app's geometric attacks.
 
-    start = raw_bits.find(PREAMBLE)
-
-    if start == -1:
-        return "[PREAMBLE NOT FOUND]"
-
-    start += len(PREAMBLE)
-
-    length_bits = raw_bits[start:start + HEADER_SIZE]
-
-    if len(length_bits) < HEADER_SIZE:
-        return "[HEADER CORRUPTED]"
-
-    payload_length = int(length_bits, 2)
-
-    start += HEADER_SIZE
-
-    payload_bits = raw_bits[start:start + payload_length]
-
-    if len(payload_bits) < payload_length:
-        return "[PAYLOAD CORRUPTED]"
-
-    if payload_length % 8:
-        return "[PAYLOAD CORRUPTED]"
-    try:
-        return bits_to_text(payload_bits)
-    except UnicodeDecodeError:
-        return "[PAYLOAD CORRUPTED]"
+    Supports the app's 90 degree rotation and (+8,+8) pixel translation.
+    No original image, text, session, or attack label is used for recovery.
+    CRC rejects corrupted packets rather than returning plausible wrong text.
+    Border cropping or insufficient surviving packet copies can still fail.
+    """
+    message = _decode_packet(image)
+    if message is not None:
+        return message
+    height, width = image.shape
+    center = (width // 2, height // 2)
+    for angle in (-90, 90, 180):
+        matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+        restored = cv2.warpAffine(image, matrix, (width, height),
+                                  flags=cv2.INTER_NEAREST,
+                                  borderMode=cv2.BORDER_CONSTANT)
+        message = _decode_packet(restored)
+        if message is not None:
+            return message
+    matrix = np.float32([[1, 0, -8], [0, 1, -8]])
+    restored = cv2.warpAffine(image, matrix, (width, height),
+                              flags=cv2.INTER_NEAREST,
+                              borderMode=cv2.BORDER_CONSTANT)
+    message = _decode_packet(restored)
+    return message if message is not None else "[WATERMARK NOT FOUND OR CORRUPTED]"

@@ -82,3 +82,43 @@ def test_invalid_upload(tmp_path, monkeypatch):
         'image': (io.BytesIO(b'not an image'), 'bad.png'),
         'watermark': 'Hello', 'method': 'dwt'})
     assert response.status_code == 400
+
+
+@pytest.mark.parametrize('shape', [(256, 256), (257, 519), (519, 257)])
+@pytest.mark.parametrize('attack_name', ['rotation', 'translation'])
+def test_dwt_geometric_recovery(shape, attack_name):
+    from attack_utils import rotation_attack, translation_attack
+    attack = {'rotation': rotation_attack, 'translation': translation_attack}[attack_name]
+    image = np.random.default_rng(19).integers(20, 235, shape, dtype=np.uint8)
+    message = 'Original مرحبا 🌊'
+    attacked = attack(embed_message_dwt(image, message))
+    _, png = cv2.imencode('.png', attacked)
+    reloaded = cv2.imdecode(png, cv2.IMREAD_GRAYSCALE)
+    assert extract_message_dwt(reloaded) == message
+
+
+@pytest.mark.parametrize('attack_name', ['rotation', 'translation'])
+def test_dwt_attacked_upload_without_original_session(tmp_path, monkeypatch, attack_name):
+    import app as web
+    monkeypatch.setattr(web, 'STATIC_DIR', str(tmp_path))
+    image = np.random.default_rng(23).integers(0, 256, (257, 519, 3), dtype=np.uint8)
+    _, png = cv2.imencode('.png', image)
+    client = app.test_client()
+    text = 'Original writing مرحبا 🌊'
+    response = client.post('/embed', data={
+        'image': (io.BytesIO(png.tobytes()), 'desktop.png'),
+        'watermark': text, 'method': 'dwt'})
+    assert response.status_code == 200
+    response = client.post('/attack', data={'attack_type': attack_name})
+    assert response.status_code == 200
+    # A separate browser has no original text, method, or attack in its session.
+    response = app.test_client().post('/extract', data={
+        'image': (io.BytesIO((tmp_path / 'attacked.png').read_bytes()), 'attacked.png'),
+        'method': 'dwt'})
+    assert response.status_code == 200
+    assert text in response.get_data(as_text=True)
+
+
+def test_dwt_rejects_unwatermarked_image():
+    image = np.random.default_rng(52).integers(0, 256, (256, 256), dtype=np.uint8)
+    assert extract_message_dwt(image) == '[WATERMARK NOT FOUND OR CORRUPTED]'
